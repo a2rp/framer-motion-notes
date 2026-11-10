@@ -305,15 +305,23 @@ export function DetailsPanel() {
 ### Sample 5
 
 ~~~jsx
-<motion.span
-  animate={{ rotate: 360 }}
-  transition={{
-    duration: 1.2,
-    ease: "linear",
-    repeat: Infinity,
-  }}
-  aria-hidden="true"
-/>
+import { MotionConfig, motion } from "motion/react";
+
+export function DecorativeSpinner() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.span
+        animate={{ rotate: 360 }}
+        transition={{
+          duration: 1.2,
+          ease: "linear",
+          repeat: Infinity,
+        }}
+        aria-hidden="true"
+      />
+    </MotionConfig>
+  );
+}
 ~~~
 
 ### Sample 6
@@ -633,15 +641,20 @@ export function ExpandableCard() {
   return (
     <motion.section
       layout
-      onClick={() => setExpanded((value) => !value)}
       style={{
         width: 280,
         padding: 20,
         border: "1px solid #555",
         borderRadius: 16,
-        cursor: "pointer",
       }}
     >
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Hide project details" : "Show project details"}
+      </button>
       <motion.h2 layout="position">Project notes</motion.h2>
       {expanded && (
         <motion.p layout>
@@ -929,8 +942,9 @@ export function PointerFollower() {
   const y = useMotionValue(0);
 
   function movePointer(event) {
-    x.set(event.clientX);
-    y.set(event.clientY);
+    const bounds = event.currentTarget.getBoundingClientRect();
+    x.set(event.clientX - bounds.left - 12);
+    y.set(event.clientY - bounds.top - 12);
   }
 
   return (
@@ -994,13 +1008,22 @@ export function SmoothFollower() {
   const sourceX = useMotionValue(0);
   const x = useSpring(sourceX, { stiffness: 220, damping: 24 });
 
+  function movePointer(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    sourceX.set(event.clientX - bounds.left);
+  }
+
   return (
-    <motion.div
-      onPointerMove={(event) => sourceX.set(event.clientX)}
-      style={{ x, padding: 16, border: "1px solid #888" }}
+    <div
+      onPointerMove={movePointer}
+      style={{ height: 120, position: "relative", border: "1px solid #888" }}
     >
-      Move the pointer to see the spring follow
-    </motion.div>
+      <motion.div
+        style={{ x, position: "absolute", left: 0, top: 16, padding: 16 }}
+      >
+        Move the pointer to see the spring follow
+      </motion.div>
+    </div>
   );
 }
 ~~~
@@ -1008,21 +1031,27 @@ export function SmoothFollower() {
 ### Sample 4
 
 ~~~jsx
+import { useState } from "react";
 import { useMotionValue, useMotionValueEvent } from "motion/react";
 
 export function ValueObserver() {
   const x = useMotionValue(0);
+  const [displayedValue, setDisplayedValue] = useState(0);
 
   useMotionValueEvent(x, "change", (latest) => {
+    setDisplayedValue(latest);
     if (latest > 200) {
       console.log("The value passed 200 pixels");
     }
   });
 
   return (
-    <button type="button" onClick={() => x.set(x.get() + 50)}>
-      Move value to {x.get()} pixels
-    </button>
+    <div>
+      <button type="button" onClick={() => x.set(x.get() + 50)}>
+        Move value by 50 pixels
+      </button>
+      <output aria-live="polite">Current value: {displayedValue} pixels</output>
+    </div>
   );
 }
 ~~~
@@ -1164,7 +1193,7 @@ export function AnimatedDot() {
         r="8"
         fill="#e85b24"
         animate={{ cx: 110 }}
-        transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse" }}
+        transition={{ duration: 1.2, repeat: 1, repeatType: "reverse" }}
       />
     </motion.svg>
   );

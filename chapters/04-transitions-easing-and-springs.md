@@ -81,18 +81,26 @@ Use value-specific transitions only when the values need noticeably different be
 delay postpones an animation. repeat sets how many additional times it plays. repeatType can loop, reverse, or mirror the animation.
 
 ~~~jsx
-<motion.span
-  animate={{ rotate: 360 }}
-  transition={{
-    duration: 1.2,
-    ease: "linear",
-    repeat: Infinity,
-  }}
-  aria-hidden="true"
-/>
+import { MotionConfig, motion } from "motion/react";
+
+export function DecorativeSpinner() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.span
+        animate={{ rotate: 360 }}
+        transition={{
+          duration: 1.2,
+          ease: "linear",
+          repeat: Infinity,
+        }}
+        aria-hidden="true"
+      />
+    </MotionConfig>
+  );
+}
 ~~~
 
-Continuous movement should have a clear purpose and should respect reduced motion. Avoid looping decorative motion beside important text or controls.
+MotionConfig disables the rotation for users who prefer reduced motion. Keep an infinite animation small and purposeful; avoid looping decorative movement beside important text or controls.
 
 ## Set a shared default
 

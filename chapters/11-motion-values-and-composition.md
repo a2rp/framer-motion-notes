@@ -18,8 +18,9 @@ export function PointerFollower() {
   const y = useMotionValue(0);
 
   function movePointer(event) {
-    x.set(event.clientX);
-    y.set(event.clientY);
+    const bounds = event.currentTarget.getBoundingClientRect();
+    x.set(event.clientX - bounds.left - 12);
+    y.set(event.clientY - bounds.top - 12);
   }
 
   return (
@@ -47,7 +48,7 @@ export function PointerFollower() {
 }
 ~~~
 
-The element follows the pointer relative to the page because clientX and clientY are viewport coordinates. For a follower constrained to the panel, subtract the panel's bounding rectangle from the pointer coordinates. Also consider touch, pointer cancellation, and reduced motion before using this effect in a real interface.
+The handler subtracts the panel's position from the viewport coordinates, so the motion values are local to the panel. Also consider touch, pointer cancellation, and reduced motion before using this effect in a real interface.
 
 ## Derive values with useTransform
 
@@ -91,13 +92,22 @@ export function SmoothFollower() {
   const sourceX = useMotionValue(0);
   const x = useSpring(sourceX, { stiffness: 220, damping: 24 });
 
+  function movePointer(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    sourceX.set(event.clientX - bounds.left);
+  }
+
   return (
-    <motion.div
-      onPointerMove={(event) => sourceX.set(event.clientX)}
-      style={{ x, padding: 16, border: "1px solid #888" }}
+    <div
+      onPointerMove={movePointer}
+      style={{ height: 120, position: "relative", border: "1px solid #888" }}
     >
-      Move the pointer to see the spring follow
-    </motion.div>
+      <motion.div
+        style={{ x, position: "absolute", left: 0, top: 16, padding: 16 }}
+      >
+        Move the pointer to see the spring follow
+      </motion.div>
+    </div>
   );
 }
 ~~~
@@ -109,26 +119,32 @@ A spring adds lag by design. Use it only when that movement helps the interactio
 useMotionValueEvent subscribes to a Motion value event and manages the subscription with the component lifecycle.
 
 ~~~jsx
+import { useState } from "react";
 import { useMotionValue, useMotionValueEvent } from "motion/react";
 
 export function ValueObserver() {
   const x = useMotionValue(0);
+  const [displayedValue, setDisplayedValue] = useState(0);
 
   useMotionValueEvent(x, "change", (latest) => {
+    setDisplayedValue(latest);
     if (latest > 200) {
       console.log("The value passed 200 pixels");
     }
   });
 
   return (
-    <button type="button" onClick={() => x.set(x.get() + 50)}>
-      Move value to {x.get()} pixels
-    </button>
+    <div>
+      <button type="button" onClick={() => x.set(x.get() + 50)}>
+        Move value by 50 pixels
+      </button>
+      <output aria-live="polite">Current value: {displayedValue} pixels</output>
+    </div>
   );
 }
 ~~~
 
-The text in this sample reads the value during React rendering, so it changes only when this button causes a render. For a live readout, use a dedicated Motion component or update state only when the displayed value needs to change. Avoid setting React state on every animation frame.
+The output is React state because this interface displays the latest value as text. Here the value changes only when the user presses the button. For a continuously animated value, avoid setting React state on every frame; use a Motion component for visual output instead.
 
 ## Compose instead of duplicating state
 

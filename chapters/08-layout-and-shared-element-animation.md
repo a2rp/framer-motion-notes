@@ -20,15 +20,20 @@ export function ExpandableCard() {
   return (
     <motion.section
       layout
-      onClick={() => setExpanded((value) => !value)}
       style={{
         width: 280,
         padding: 20,
         border: "1px solid #555",
         borderRadius: 16,
-        cursor: "pointer",
       }}
     >
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Hide project details" : "Show project details"}
+      </button>
       <motion.h2 layout="position">Project notes</motion.h2>
       {expanded && (
         <motion.p layout>

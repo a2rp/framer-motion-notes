@@ -29,7 +29,7 @@ export function AnimatedDot() {
         r="8"
         fill="#e85b24"
         animate={{ cx: 110 }}
-        transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse" }}
+        transition={{ duration: 1.2 }}
       />
     </motion.svg>
   );
